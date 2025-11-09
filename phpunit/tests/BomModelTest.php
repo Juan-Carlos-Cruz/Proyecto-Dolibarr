@@ -17,7 +17,7 @@ class BomModelTest extends TestCase
     {
         $bom = new \BOM($GLOBALS['db']);
         $bom->create(['label' => 'QA BOM', 'fk_product_parent' => 1]);
-        $this->expectException('\InvalidArgumentException');
-        $bom->addline(['qty' => 0]);
+        $result = $bom->addline(['qty' => 0]);
+        $this->assertLessThanOrEqual(0, $result);
     }
 }

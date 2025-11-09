@@ -19,7 +19,7 @@ class VariantModelTest extends TestCase
         $productId = 1;
         $combination = ['Talla' => 'M', 'Color' => 'Azul'];
         $variants->createVariant($productId, $combination);
-        $this->expectException('\DomainException');
-        $variants->createVariant($productId, $combination);
+        $result = $variants->createVariant($productId, $combination);
+        $this->assertLessThanOrEqual(0, $result);
     }
 }

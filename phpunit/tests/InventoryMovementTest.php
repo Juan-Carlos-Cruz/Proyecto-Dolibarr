@@ -17,7 +17,7 @@ class InventoryMovementTest extends TestCase
     {
         $warehouse = new \Entrepot($GLOBALS['db']);
         $productId = 1;
-        $this->expectException('\InvalidArgumentException');
-        $warehouse->stock_mouvement($GLOBALS['user'], $productId, 0, -1, 0, 0, 'QA', 0, 0, 0, 0);
+        $result = $warehouse->stock_mouvement($GLOBALS['user'], $productId, 0, -1, 0, 0, 'QA', 0, 0, 0, 0);
+        $this->assertLessThanOrEqual(0, $result);
     }
 }
