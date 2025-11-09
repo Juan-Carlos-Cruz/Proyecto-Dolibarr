@@ -1,0 +1,20 @@
+{
+  "name": "dolibarr-quality-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automation suite for Dolibarr v22 products and BOM modules.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ci": "playwright test --reporter=line,allure-playwright",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "allure:serve": "allure serve playwright/allure-results",
+    "allure:generate": "allure generate playwright/allure-results -o playwright/allure-report --clean",
+    "report:word": "python3 scripts/generate_word_report.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.43.1",
+    "allure-playwright": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}

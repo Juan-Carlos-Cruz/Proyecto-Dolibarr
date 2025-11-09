@@ -1,0 +1,12 @@
+node_modules/
+playwright/playwright-report/
+playwright/allure-results/
+playwright/allure-report/
+playwright/test-results/
+playwright/reports/*.log
+playwright/reports/*.xml
+vendor/
+composer.lock
+*.pyc
+__pycache__/
+docs/*.docx
