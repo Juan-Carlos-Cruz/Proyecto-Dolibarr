@@ -8,8 +8,15 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node", "@playwright/test"]
+    "typeRoots": ["./types"],
+    "outDir": "dist",
+    "rootDir": "."
   },
-  "include": ["playwright/**/*.ts"],
+  "include": [
+    "playwright/tests/**/*.ts",
+    "playwright/fixtures/**/*.ts",
+    "playwright/helpers/**/*.ts",
+    "playwright/simulator/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

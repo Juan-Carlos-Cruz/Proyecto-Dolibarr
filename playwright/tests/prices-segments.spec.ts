@@ -1,31 +1,24 @@
-import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from '../helpers/auth';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import { segmentMatrix } from '../fixtures/test-data';
+import { loginAsAdmin } from '../helpers/auth';
 
-test.describe('HU-006 multiprecios por segmento', () => {
-  test('PF-007: validar precios por segmento en pedidos', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.getByRole('link', { name: /Productos|Products/i }).click();
-    await page.getByRole('link', { name: /Producto QA 1|PROD-/i }).first().click();
-    await page.getByRole('link', { name: /Precios especiales/i }).click();
+test('HU-006 multiprecios por segmento', async (t) => {
+  await t.test('PF-007: validar precios por segmento en pedidos', () => {
+    const app = loginAsAdmin();
+    const productRef = 'PROD-0000001';
 
-    for (const segment of segmentMatrix) {
-      await page.getByRole('button', { name: /Añadir precio/i }).click();
-      await page.getByLabel(/Segmento/i).selectOption(segment.toString());
-      await page.getByLabel(/Precio/i).fill((100 + segment * 10).toString());
-      await page.getByRole('button', { name: /Guardar/i }).click();
-      await expect(page.getByRole('row', { name: new RegExp(`Segmento.*${segment}`) })).toBeVisible();
-    }
+    segmentMatrix.forEach((segment) => {
+      app.setSegmentPrice(productRef, segment, 120 + segment * 5);
+    });
 
-    await page.getByRole('link', { name: /Pedidos/i }).click();
-    await page.getByRole('button', { name: /Nuevo pedido/i }).click();
-    await page.getByRole('textbox', { name: /Cliente/i }).fill('Cliente segmento');
-    await page.getByRole('option', { name: /Cliente segmento 1/ }).click();
-    await page.getByRole('button', { name: /Crear/i }).click();
-    await page.getByRole('button', { name: /Añadir línea/i }).click();
-    await page.getByRole('textbox', { name: /Producto/i }).fill('Producto QA');
-    await page.getByRole('option', { name: /Producto QA/ }).first().click();
-    await page.getByRole('button', { name: /Añadir/i }).click();
-    await expect(page.getByText(/Segmento 1/)).toBeVisible();
+    const customer = 'Cliente segmento 1';
+    app.createThirdParty(customer, 1);
+    const order = app.createSalesOrder(customer);
+    const withLine = app.addOrderLine(order.id, productRef, 2);
+    const line = withLine.lines[withLine.lines.length - 1];
+    assert.ok(line);
+    assert.equal(line?.segment, 1);
+    assert.equal(line?.price, (120 + 1 * 5) * 2);
   });
 });

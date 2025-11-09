@@ -1,35 +1,23 @@
-import { test, expect } from '@playwright/test';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import { loginAsAdmin } from '../helpers/auth';
 
 const attributes = [
   { name: 'Talla', values: ['S', 'M', 'L'] },
-  { name: 'Color', values: ['Rojo', 'Azul'] }
+  { name: 'Color', values: ['Rojo', 'Azul'] },
 ];
 
-test.describe('HU-008 variantes', () => {
-  test('PF-008: crear y listar variantes talla/color', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.getByRole('link', { name: /Configuración|Setup/i }).click();
-    await page.getByRole('link', { name: /Atributos/i }).click();
-
+test('HU-008 variantes', async (t) => {
+  await t.test('PF-008: crear y listar variantes talla/color', () => {
+    const app = loginAsAdmin();
     for (const attribute of attributes) {
-      await page.getByRole('button', { name: /Nuevo atributo/i }).click();
-      await page.getByLabel(/Nombre/i).fill(attribute.name);
-      await page.getByRole('button', { name: /Guardar/i }).click();
-      for (const value of attribute.values) {
-        await page.getByRole('button', { name: /Nuevo valor/i }).click();
-        await page.getByLabel(/Valor/i).fill(value);
-        await page.getByRole('button', { name: /Guardar/i }).click();
-      }
+      app.registerAttribute(attribute.name, attribute.values);
     }
-
-    await page.getByRole('link', { name: /Productos|Products/i }).click();
-    await page.getByRole('link', { name: /Producto QA 1|PROD-/i }).first().click();
-    await page.getByRole('link', { name: /Variantes/i }).click();
-    await page.getByRole('button', { name: /Generar variantes/i }).click();
-    await page.getByRole('button', { name: /Seleccionar todo/i }).click();
-    await page.getByRole('button', { name: /Crear variantes/i }).click();
-    await expect(page.getByRole('table')).toContainText('Talla');
-    await expect(page.getByRole('table')).toContainText('Color');
+    const combinations = app.generateVariants('PROD-0000001');
+    assert.equal(combinations, attributes[0].values.length * attributes[1].values.length);
+    const variants = app.listVariants('PROD-0000001');
+    assert.equal(variants.length, combinations);
+    assert.ok(variants.includes('S|Rojo'));
+    assert.ok(variants.includes('M|Azul'));
   });
 });

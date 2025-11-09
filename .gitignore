@@ -7,6 +7,7 @@ playwright/reports/*.log
 playwright/reports/*.xml
 vendor/
 composer.lock
+dist/
 *.pyc
 __pycache__/
 docs/*.docx

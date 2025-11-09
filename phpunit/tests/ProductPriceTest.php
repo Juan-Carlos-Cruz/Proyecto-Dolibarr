@@ -16,25 +16,22 @@ class ProductPriceTest extends TestCase
         }
     }
 
-    public static function vatProvider(): array
-    {
-        return [
-            'sin IVA' => [0.0, 100.0, 0.0],
-            'IVA 5%' => [0.05, 100.0, 5.0],
-            'IVA 19%' => [0.19, 100.0, 19.0],
-        ];
-    }
-
-    /**
-     * @dataProvider vatProvider
-     */
-    public function testVatComputation(float $vatRate, float $basePrice, float $expectedIncrement): void
+    public function testVatComputation(): void
     {
         $product = new \Product($GLOBALS['db']);
-        $product->tva_tx = $vatRate * 100;
-        $price = $product->price2num($basePrice);
-        $vat = $product->getVat($price);
-        $this->assertEqualsWithDelta($expectedIncrement, $vat, 0.01);
+        $scenarios = [
+            [0.0, 100.0, 0.0],
+            [0.05, 100.0, 5.0],
+            [0.19, 100.0, 19.0],
+            [0.25, 80.0, 20.0],
+        ];
+
+        foreach ($scenarios as [$vatRate, $basePrice, $expectedIncrement]) {
+            $product->tva_tx = $vatRate * 100;
+            $price = $product->price2num($basePrice);
+            $vat = $product->getVat($price);
+            $this->assertEqualsWithDelta($expectedIncrement, $vat, 0.01);
+        }
     }
 
     public function testMinimumPriceValidation(): void

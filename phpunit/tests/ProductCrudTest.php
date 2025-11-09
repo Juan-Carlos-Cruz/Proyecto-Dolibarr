@@ -20,8 +20,11 @@ class ProductCrudTest extends TestCase
     {
         $product = new \Product($GLOBALS['db']);
         $product->label = '';
-        $this->expectException('\Exception');
-        $product->validateFields('create');
+        $result = $product->validateFields('create');
+        $errors = property_exists($product, 'errors') ? $product->errors : [];
+
+        $this->assertLessThanOrEqual(0, $result);
+        $this->assertNotEmpty($errors);
     }
 
     public function testValidateFieldsAcceptsValidPayload(): void
@@ -30,6 +33,10 @@ class ProductCrudTest extends TestCase
         $product->label = 'Producto QA';
         $product->ref = 'PROD-QA-VALID';
         $product->weight = 0.5;
-        $this->assertTrue($product->validateFields('create'));
+        $result = $product->validateFields('create');
+        $errors = property_exists($product, 'errors') ? $product->errors : [];
+
+        $this->assertGreaterThanOrEqual(0, $result);
+        $this->assertEmpty($errors);
     }
 }

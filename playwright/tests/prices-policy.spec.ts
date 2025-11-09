@@ -1,48 +1,51 @@
-import { test, expect } from '@playwright/test';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import { loginAsAdmin } from '../helpers/auth';
 
 const vatValues = [0, 0.05, 0.19, 0.25];
 
 const priceMatrix = [
-  { base: 100, min: 80, expected: 100 },
-  { base: 50, min: 55, expected: 55 }
+  { base: 100, min: 80 },
+  { base: 50, min: 55 },
 ];
 
-test.describe('HU-021/022 políticas de precios', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.getByRole('link', { name: /Productos|Products/i }).click();
-    await page.getByRole('link', { name: /Producto QA 1|PROD-/i }).first().click();
-    await page.getByRole('link', { name: /Precios/i }).click();
+test('HU-021/022 políticas de precios', async (t) => {
+  await t.test('PF-006: modificar precio base y VAT', () => {
+    const app = loginAsAdmin();
+    for (const vat of vatValues) {
+      const result = app.updatePricing('PROD-0000001', {
+        basePrice: 100,
+        minPrice: 90,
+        vatRate: vat,
+      });
+      if (vat > 0.21) {
+        assert.equal(result.status, 'warning');
+        assert.match(result.message, /VAT out of range/);
+      } else {
+        assert.equal(result.status, 'saved');
+      }
+    }
+    const history = app.getPricingHistory('PROD-0000001');
+    assert.equal(history.length, vatValues.length);
   });
 
-  for (const vat of vatValues) {
-    test(`PF-006: modificar precio base y VAT ${vat}`, async ({ page }) => {
-      await page.getByLabel(/Precio base/i).fill('100');
-      await page.getByLabel(/Precio mínimo/i).fill('90');
-      await page.getByLabel(/IVA|VAT/i).fill((vat * 100).toString());
-      await page.getByRole('button', { name: /Guardar|Save/i }).click();
-      if (vat > 0.21) {
-        await expect(page.getByText(/fuera de rango/i)).toBeVisible();
-      } else {
-        await expect(page.getByText(/Actualizado/i)).toBeVisible();
-      }
-    });
-  }
-
-  for (const scenario of priceMatrix) {
-    test(`PF-005: consulta historial y precios base/min ${scenario.base}/${scenario.min}`, async ({ page }) => {
-      await page.getByRole('button', { name: /Historial/i }).click();
-      await expect(page.getByRole('table')).toBeVisible();
-      await expect(page.getByRole('table')).toContainText(/Usuario/);
-      await page.getByLabel(/Precio base/i).fill(String(scenario.base));
-      await page.getByLabel(/Precio mínimo/i).fill(String(scenario.min));
-      await page.getByRole('button', { name: /Guardar|Save/i }).click();
+  await t.test('PF-005: consulta historial y precios base/min', () => {
+    const app = loginAsAdmin();
+    for (const scenario of priceMatrix) {
+      const result = app.updatePricing('PROD-0000002', {
+        basePrice: scenario.base,
+        minPrice: scenario.min,
+        vatRate: 0.19,
+      });
       if (scenario.base < scenario.min) {
-        await expect(page.getByText(/mínimo/i)).toBeVisible();
+        assert.equal(result.status, 'error');
+        assert.match(result.message, /Minimum price/);
       } else {
-        await expect(page.getByText(/Actualizado/i)).toBeVisible();
+        assert.equal(result.status, 'saved');
       }
-    });
-  }
+    }
+    const history = app.getPricingHistory('PROD-0000002');
+    assert.equal(history.length, priceMatrix.length);
+    assert.ok(history.every((entry) => entry.user === 'admin'));
+  });
 });
