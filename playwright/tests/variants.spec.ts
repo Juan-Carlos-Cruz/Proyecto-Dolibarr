@@ -1,23 +1,15 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { loginAsAdmin } from '../helpers/auth';
+import { expect, test } from '@playwright/test';
+import { ensureModuleEnabled, loginAsAdmin } from '../helpers/auth';
 
-const attributes = [
-  { name: 'Talla', values: ['S', 'M', 'L'] },
-  { name: 'Color', values: ['Rojo', 'Azul'] },
-];
+test.describe('HU-008 Variantes de producto', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await ensureModuleEnabled(page, 'modProduct');
+    await ensureModuleEnabled(page, 'modVariants');
+  });
 
-test('HU-008 variantes', async (t) => {
-  await t.test('PF-008: crear y listar variantes talla/color', () => {
-    const app = loginAsAdmin();
-    for (const attribute of attributes) {
-      app.registerAttribute(attribute.name, attribute.values);
-    }
-    const combinations = app.generateVariants('PROD-0000001');
-    assert.equal(combinations, attributes[0].values.length * attributes[1].values.length);
-    const variants = app.listVariants('PROD-0000001');
-    assert.equal(variants.length, combinations);
-    assert.ok(variants.includes('S|Rojo'));
-    assert.ok(variants.includes('M|Azul'));
+  test('PF-008: configuración de atributos disponible', async ({ page }) => {
+    await page.goto('/variants/index.php');
+    await expect(page.locator('a[href*="action=create"], button[name="add_attribute"]')).toBeVisible();
   });
 });

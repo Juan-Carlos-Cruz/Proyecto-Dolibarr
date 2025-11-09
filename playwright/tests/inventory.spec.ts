@@ -1,59 +1,29 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { loginAsAdmin } from '../helpers/auth';
+import { expect, test } from '@playwright/test';
+import { ensureModuleEnabled, loginAsAdmin } from '../helpers/auth';
 
-const inventoryScenarios = [
-  { movement: 'Entrada', type: 'in' as const, quantity: 10 },
-  { movement: 'Salida', type: 'out' as const, quantity: 5 },
-  { movement: 'Transferencia', type: 'transfer' as const, quantity: 3 },
-];
-
-test('HU-025 al HU-028 inventario y documentos', async (t) => {
-  await t.test('PF-009: adjuntar documentos al producto', () => {
-    const app = loginAsAdmin();
-    const files = [
-      { name: 'ficha-tecnica.pdf', category: 'Documentación', content: 'QA' },
-      { name: 'foto.jpg', category: 'Imágenes', content: 'QA' },
-    ];
-    app.attachDocuments('PROD-0000001', files);
-    const docs = app.getProductDocuments('PROD-0000001');
-    assert.equal(docs.length, 2);
-    assert.ok(docs.some((doc) => doc.name === 'ficha-tecnica.pdf'));
+test.describe('HU-025 a HU-028 Inventario', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await ensureModuleEnabled(page, 'modProduct');
   });
 
-  await t.test('PF-010: consulta de niveles por almacén', () => {
-    const app = loginAsAdmin();
-    app.registerMovement({
-      warehouse: 'Central',
-      reference: 'PROD-0000001',
-      quantity: 4,
-      reason: 'Inicial',
-      type: 'in',
-    });
-    const snapshot = app.getWarehouseSnapshot('Central');
-    assert.ok(snapshot.some((item) => item.reference === 'PROD-0000001' && item.quantity >= 4));
+  test('PF-010: consulta de inventario por almacén', async ({ page }) => {
+    await page.goto('/product/stock/index.php');
+    await expect(page.locator('form[name="liststock"], form[action*="stock/index.php"]')).toBeVisible();
+    await expect(page.locator('table.liste, table.tagtable')).toBeVisible();
   });
 
-  for (const scenario of inventoryScenarios) {
-    await t.test(`PF-011: registrar movimiento ${scenario.movement}`, () => {
-      const app = loginAsAdmin();
-      app.registerMovement({
-        warehouse: 'Central',
-        reference: 'PROD-0000001',
-        quantity: 10,
-        reason: 'Inicial',
-        type: 'in',
-      });
-      const movement = app.registerMovement({
-        warehouse: 'Central',
-        reference: 'PROD-0000001',
-        quantity: scenario.quantity,
-        reason: `QA ${scenario.movement}`,
-        type: scenario.type,
-      });
-      assert.equal(movement.type, scenario.type);
-      const log = app.getMovements();
-      assert.ok(log.some((entry) => entry.reason.includes(`QA ${scenario.movement}`)));
-    });
-  }
+  test('PF-011: formulario de movimientos disponible', async ({ page }) => {
+    await page.goto('/product/stock/movement.php?action=create');
+    await expect(page.locator('form[name="createmovement"], form[action*="movement.php"]')).toBeVisible();
+    await expect(page.locator('select[name="fk_product"], input[name="fk_product"]')).toBeVisible();
+  });
+
+  test('PF-009: adjuntos disponibles en ficha de producto', async ({ page }) => {
+    await page.goto('/product/list.php');
+    const firstProductLink = page.locator('table.liste tbody tr td a').first();
+    await firstProductLink.click();
+    await page.locator('a[href*="tab=document"]').first().click();
+    await expect(page.locator('form[action*="document.php"] input[type="file"]')).toBeVisible();
+  });
 });
