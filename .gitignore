@@ -10,3 +10,5 @@ composer.lock
 *.pyc
 __pycache__/
 docs/*.docx
+docker/dolibarr/source/*
+!docker/dolibarr/source/.gitkeep
