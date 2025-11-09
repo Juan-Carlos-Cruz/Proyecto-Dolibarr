@@ -1,5 +1,5 @@
 import os
-from typing import Generator
+from typing import Generator, Optional
 
 import allure
 import pytest
@@ -16,6 +16,17 @@ except ImportError:  # pragma: no cover - optional dependency handled via requir
     ChromeDriverManager = None  # type: ignore
 
 DEFAULT_TIMEOUT = int(os.getenv("SELENIUM_WAIT_TIMEOUT", "20"))
+DEFAULT_REMOTE_URL = os.getenv("SELENIUM_REMOTE_DEFAULT", "http://localhost:4444/wd/hub")
+
+
+def _should_use_remote() -> bool:
+    return os.getenv("SELENIUM_FORCE_LOCAL", "").lower() not in {"1", "true", "yes"}
+
+
+def _resolve_remote_url() -> Optional[str]:
+    if not _should_use_remote():
+        return None
+    return os.getenv("SELENIUM_REMOTE_URL") or DEFAULT_REMOTE_URL
 
 
 def _build_chrome_options() -> ChromeOptions:
@@ -34,7 +45,18 @@ def _build_local_driver(options: ChromeOptions) -> webdriver.Chrome:
             "webdriver-manager no está disponible. Instala las dependencias desde requirements.txt o "
             "configura SELENIUM_REMOTE_URL para usar un Selenium Grid existente."
         )
-    service = ChromeService(executable_path=ChromeDriverManager().install())
+    try:
+        service = ChromeService(executable_path=ChromeDriverManager().install())
+    except AttributeError as exc:  # webdriver-manager no pudo detectar Chrome local
+        raise RuntimeError(
+            "No se pudo determinar la versión local de Google Chrome. Ejecuta el grid Selenium con "
+            "'docker compose up -d selenium' o define SELENIUM_REMOTE_URL / WDM_BROWSER_VERSION para "
+            "usar un navegador remoto."
+        ) from exc
+    except Exception as exc:  # pragma: no cover - errores inesperados se informan al usuario
+        raise RuntimeError(
+            "Fallo al inicializar el ChromeDriver local. Revisa la instalación de Chrome o usa SELENIUM_REMOTE_URL."
+        ) from exc
     return webdriver.Chrome(service=service, options=options)
 
 
@@ -58,11 +80,19 @@ def admin_credentials() -> tuple[str, str]:
 @pytest.fixture
 def driver() -> Generator[webdriver.Remote, None, None]:
     options = _build_chrome_options()
-    remote_url = os.getenv("SELENIUM_REMOTE_URL")
-    if remote_url:
-        driver_instance: webdriver.Remote = _build_remote_driver(options, remote_url)
-    else:
-        driver_instance = _build_local_driver(options)
+    remote_url = _resolve_remote_url()
+
+    try:
+        if remote_url:
+            driver_instance = _build_remote_driver(options, remote_url)
+        else:
+            driver_instance = _build_local_driver(options)
+    except Exception as exc:
+        pytest.fail(
+            "No fue posible inicializar el navegador para las pruebas funcionales. "
+            "Verifica que el contenedor selenium esté activo (`docker compose up -d selenium`) "
+            "o define SELENIUM_REMOTE_URL/SELENIUM_FORCE_LOCAL según corresponda.\n\n" + str(exc)
+        )
 
     driver_instance.implicitly_wait(2)
     yield driver_instance

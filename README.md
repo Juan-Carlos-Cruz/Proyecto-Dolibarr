@@ -25,7 +25,9 @@ reports/
 
 * Python 3.10+
 * Pip y virtualenv (opcional pero recomendado)
-* Google Chrome o Chromium disponible localmente **o** un Selenium Grid accesible (configurable vía `SELENIUM_REMOTE_URL`).
+* Selenium Grid disponible (por defecto se usa el contenedor `selenium/standalone-chrome` incluido en `docker-compose.yml`).
+  Si prefieres utilizar un navegador local, exporta `SELENIUM_FORCE_LOCAL=1` y asegúrate de tener Google Chrome/Chromium y
+  `chromedriver` compatibles.
 * Docker y Docker Compose plugin (para levantar Dolibarr)
 * PHP >= 8.1 con extensiones necesarias para ejecutar Dolibarr
 * Composer
@@ -43,6 +45,8 @@ reports/
 
    * `dolibarr_app`: contenedor oficial `dolibarr/dolibarr:22.0.2` servido en <http://localhost:8080>.
    * `dolibarr_db`: base de datos MariaDB 10.6 inicializada con credenciales predeterminadas (`dolibarr`/`dolibarr`).
+   * `dolibarr_selenium`: grid Selenium basado en Chrome (`selenium/standalone-chrome`) expuesto en `http://localhost:4444/wd/hub`
+     y con acceso VNC opcional en `http://localhost:7900` (password `secret`).
 
 2. Espera a que los contenedores estén saludables (`docker compose ps`).
 3. Completa el asistente de instalación de Dolibarr en `http://localhost:8080/install` usando los valores preconfigurados:
@@ -87,7 +91,10 @@ pip install -r requirements.txt
 composer install
 ```
 
-Si deseas utilizar un Selenium Grid remoto, exporta `SELENIUM_REMOTE_URL` antes de ejecutar las pruebas. En caso contrario, se instalará automáticamente `chromedriver` mediante `webdriver-manager` y se usará el navegador local en modo headless.
+De manera predeterminada las pruebas funcionales utilizan el grid Selenium incluido en el `docker-compose` (`http://localhost:4444/wd/hub`).
+Si necesitas apuntar a otro grid, exporta `SELENIUM_REMOTE_URL`. Para ejecutar con un navegador local, define `SELENIUM_FORCE_LOCAL=1`
+y asegúrate de contar con Google Chrome/Chromium instalado; en caso de no detectar la versión, también puedes exportar
+`WDM_BROWSER_VERSION`.
 
 ## Ejecución de pruebas funcionales (Selenium + Pytest)
 
@@ -116,9 +123,30 @@ allure serve reports/functional/allure-results
 
 Si necesitas forzar un Selenium Grid remoto:
 
+El grid se resuelve automáticamente a `http://localhost:4444/wd/hub`. Si estás usando otra URL:
+
 ```bash
-SELENIUM_REMOTE_URL=http://localhost:4444/wd/hub pytest tests/functional -m functional
+SELENIUM_REMOTE_URL=http://mi-grid:4444/wd/hub pytest tests/functional -m functional
 ```
+
+Para forzar el uso del navegador local:
+
+```bash
+SELENIUM_FORCE_LOCAL=1 pytest tests/functional -m functional
+```
+
+## Ejecución integral (funcionales + unitarias + informe)
+
+Una vez provisionado el entorno (Docker, dependencias Python/PHP y Allure CLI), puedes ejecutar todo el flujo con un único comando:
+
+```bash
+scripts/run_all_tests.sh
+```
+
+El script realizará, en orden: (1) iniciará el grid Selenium (puedes omitirlo con `SELENIUM_AUTOSTART=0` si ya está arriba),
+(2) ejecutará las pruebas funcionales con Pytest/Selenium generando `reports/functional/allure-results`, (3) correrá PHPUnit
+dejando los resultados JUnit en `reports/phpunit/phpunit-junit.xml` y (4) generará el informe Word con
+`scripts/generate_word_report.py`. Al finalizar muestra el comando para abrir el dashboard Allure.
 
 ## Ejecución de pruebas unitarias (PHPUnit)
 
