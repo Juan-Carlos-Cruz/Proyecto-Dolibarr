@@ -14,8 +14,8 @@ from docx import Document
 from docx.shared import Inches
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLURE_RESULTS = ROOT / 'playwright' / 'allure-results'
-PHPUNIT_JUNIT = ROOT / 'playwright' / 'reports' / 'phpunit-junit.xml'
+ALLURE_RESULTS = ROOT / 'reports' / 'functional' / 'allure-results'
+PHPUNIT_JUNIT = ROOT / 'reports' / 'phpunit' / 'phpunit-junit.xml'
 OUTPUT = ROOT / 'docs' / 'informe-pruebas.docx'
 
 
@@ -63,7 +63,7 @@ def build_document():
 
     allure_results = _load_allure_results()
     allure_summary = _summarize_allure(allure_results)
-    document.add_heading('Resumen Playwright (Allure)', level=1)
+    document.add_heading('Resumen Selenium (Allure)', level=1)
     document.add_paragraph(f"Casos: {allure_summary['total']}")
     table = document.add_table(rows=1, cols=2)
     hdr_cells = table.rows[0].cells
@@ -91,9 +91,8 @@ def build_document():
     row[3].text = status
 
     document.add_heading('Evidencias disponibles', level=1)
-    document.add_paragraph('Playwright HTML: playwright/playwright-report/index.html')
-    document.add_paragraph('Allure raw: playwright/allure-results')
-    document.add_paragraph('PHPUnit JUnit: playwright/reports/phpunit-junit.xml')
+    document.add_paragraph('Allure raw: reports/functional/allure-results')
+    document.add_paragraph('PHPUnit JUnit: reports/phpunit/phpunit-junit.xml')
 
     document.add_heading('Configuración de ejecución', level=1)
     env_table = document.add_table(rows=1, cols=2)
@@ -105,7 +104,7 @@ def build_document():
         row[1].text = os.getenv(key, 'N/D')
 
     document.add_heading('Notas', level=1)
-    document.add_paragraph('Este reporte se genera automáticamente a partir de los resultados de Playwright y PHPUnit.')
+    document.add_paragraph('Este reporte se genera automáticamente a partir de los resultados de Selenium (Pytest) y PHPUnit.')
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     document.save(OUTPUT)
