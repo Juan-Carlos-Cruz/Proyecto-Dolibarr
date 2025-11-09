@@ -1,53 +1,51 @@
 # Dolibarr v22 Quality Automation Suite
 
-Este repositorio contiene la infraestructura de automatización solicitada para cubrir las HU de Products y Bill of Materials (BOM) en Dolibarr v22 utilizando Playwright (TypeScript) para pruebas funcionales y PHPUnit para pruebas unitarias. También se integra Allure como dashboard de resultados y un generador de informe en Word.
+Este repositorio contiene la infraestructura de automatización solicitada para cubrir las HU de Products y Bill of Materials (BOM) en Dolibarr v22 utilizando Selenium (Python) para pruebas funcionales y PHPUnit para pruebas unitarias. También se integra Allure como dashboard de resultados y un generador de informe en Word.
 
 ## Estructura
 
 ```
-playwright/
-  playwright.config.ts
-  fixtures/
-  helpers/
-  tests/
+tests/
+  functional/
+    data/
+    utils/
+    test_*.py
 phpunit/
   bootstrap.php
   phpunit.xml
   tests/
-Scripts y reportes complementarios
+scripts/
+  generate_word_report.py
+reports/
+  functional/
+  phpunit/
 ```
 
 ## Prerrequisitos
 
-* Node.js >= 18
-* npm
+* Python 3.10+
+* Pip y virtualenv (opcional pero recomendado)
+* Google Chrome o Chromium disponible localmente **o** un Selenium Grid accesible (configurable vía `SELENIUM_REMOTE_URL`).
 * Docker y Docker Compose plugin (para levantar Dolibarr)
 * PHP >= 8.1 con extensiones necesarias para ejecutar Dolibarr
 * Composer
-* Python 3.10+
-* Allure CLI (https://docs.qameta.io/allure/)
+* Allure CLI (<https://docs.qameta.io/allure/>)
 
 ## Puesta en marcha del entorno Docker (Dolibarr v22)
 
-1. Crea los volúmenes locales la primera vez (se generan automáticamente al levantar el stack, pero puedes revisarlos en `docker/`).
-2. Levanta la infraestructura completa:
+1. Levanta la infraestructura completa:
 
-```bash
-docker compose up -d
-```
+   ```bash
+   docker compose up -d
+   ```
 
    Esto inicia:
 
-   * `dolibarr_app`: contenedor oficial `dolibarr/dolibarr:22.0.2` servido en http://localhost:8080.
+   * `dolibarr_app`: contenedor oficial `dolibarr/dolibarr:22.0.2` servido en <http://localhost:8080>.
    * `dolibarr_db`: base de datos MariaDB 10.6 inicializada con credenciales predeterminadas (`dolibarr`/`dolibarr`).
 
-3. Espera a que los contenedores estén saludables (el servicio `dolibarr_db` tiene healthcheck). Puedes validar con:
-
-```bash
-docker compose ps
-```
-
-4. Completa el asistente de instalación de Dolibarr en `http://localhost:8080/install` usando los valores preconfigurados:
+2. Espera a que los contenedores estén saludables (`docker compose ps`).
+3. Completa el asistente de instalación de Dolibarr en `http://localhost:8080/install` usando los valores preconfigurados:
 
    * **Servidor**: `db`
    * **Base de datos**: `dolibarr`
@@ -57,7 +55,7 @@ docker compose ps
 
    El instalador generará automáticamente `docker/dolibarr/conf/conf.php` con la configuración persistida en el repositorio local.
 
-5. (Opcional) Para cargar módulos o personalizaciones coloca los archivos dentro de:
+4. (Opcional) Para cargar módulos o personalizaciones coloca los archivos dentro de:
 
    * `docker/dolibarr/custom/`
    * `docker/dolibarr/modules/`
@@ -83,15 +81,17 @@ docker compose down -v
 ## Instalación
 
 ```bash
-npm install
-npx playwright install --with-deps
-composer install
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+composer install
 ```
 
-## Ejecución de pruebas funcionales (Playwright)
+Si deseas utilizar un Selenium Grid remoto, exporta `SELENIUM_REMOTE_URL` antes de ejecutar las pruebas. En caso contrario, se instalará automáticamente `chromedriver` mediante `webdriver-manager` y se usará el navegador local en modo headless.
 
-Configurar las variables de entorno:
+## Ejecución de pruebas funcionales (Selenium + Pytest)
+
+Configura las variables de entorno mínimas:
 
 ```bash
 export BASE_URL=http://localhost:8080
@@ -99,28 +99,34 @@ export ADMIN_USER=admin
 export ADMIN_PASS=admin
 ```
 
-Ejecutar todo el set de pruebas con reporter de Allure:
+Ejecuta la suite completa con reporter de Allure:
 
 ```bash
-npm run test:ci
+pytest tests/functional -m functional
 ```
 
-* Resultados HTML: `playwright/playwright-report`
-* Resultados Allure: `playwright/allure-results`
+* Resultados Allure (brutos): `reports/functional/allure-results`
+* Capturas ante fallo: incrustadas en el reporte Allure
 
 Para abrir el dashboard de Allure:
 
 ```bash
-npm run allure:serve
+allure serve reports/functional/allure-results
+```
+
+Si necesitas forzar un Selenium Grid remoto:
+
+```bash
+SELENIUM_REMOTE_URL=http://localhost:4444/wd/hub pytest tests/functional -m functional
 ```
 
 ## Ejecución de pruebas unitarias (PHPUnit)
 
 ```bash
-DOLIBARR_ROOT=/ruta/a/dolibarr php -d include_path=. ./vendor/bin/phpunit -c phpunit/phpunit.xml --testdox
+DOLIBARR_ROOT=/ruta/a/dolibarr php -d include_path=. ./vendor/bin/phpunit -c phpunit/phpunit.xml --testdox --log-junit reports/phpunit/phpunit-junit.xml
 ```
 
-Los reportes JUnit y TeamCity se almacenan en `playwright/reports/` para ser consumidos en el informe unificado.
+Los reportes JUnit se almacenan en `reports/phpunit/phpunit-junit.xml` para ser consumidos en el informe unificado.
 
 ### Obtener el código fuente de Dolibarr para PHPUnit
 
@@ -131,32 +137,32 @@ Para que las pruebas unitarias puedan incluir clases del core, exporta una copia
 docker compose exec dolibarr_app bash -lc 'tar -C /var/www/html -cf - htdocs core includes scripts' | tar -C docker/dolibarr/source -xf -
 
 # Ejecutar PHPUnit apuntando a la copia exportada
-DOLIBARR_ROOT=$(pwd)/docker/dolibarr/source php -d include_path=. ./vendor/bin/phpunit -c phpunit/phpunit.xml --testdox
+DOLIBARR_ROOT=$(pwd)/docker/dolibarr/source php -d include_path=. ./vendor/bin/phpunit -c phpunit/phpunit.xml --testdox --log-junit reports/phpunit/phpunit-junit.xml
 ```
 
 El contenido de `docker/dolibarr/source` (excepto el marcador `.gitkeep`) queda fuera del control de versiones para que puedas actualizarlo libremente.
 
 ## Generación de informe Word
 
-Luego de ejecutar Playwright y PHPUnit:
+Luego de ejecutar Pytest (Selenium) y PHPUnit:
 
 ```bash
-npm run report:word
+python scripts/generate_word_report.py
 ```
 
 Esto genera `docs/informe-pruebas.docx` con los totales consolidados.
 
 ## Datos masivos y técnicas de prueba
 
-* `playwright/fixtures/test-data.ts` genera 50 productos con combinatoria de segmentos, IVA, tipos y variantes para reforzar Particiones de Equivalencia, Valores Límite y Tablas de Decisión.
-* Las suites contienen bucles y data-driven testing para ejercitar múltiples rutas.
-* Las pruebas de PHPUnit contemplan validación de excepciones, reglas de negocio y cobertura de ramas.
+* `tests/functional/data/products.py` define datos dinámicos para reforzar Particiones de Equivalencia, Valores Límite y combinaciones de variantes.
+* Las suites contienen pasos detallados y evidencias mediante Allure.
+* Las pruebas de PHPUnit contemplan validación de excepciones, reglas de negocio y cobertura de ramas (ver informe de pruebas).
 
 ## Integración continua sugerida
 
 1. Levantar stack Docker definido en `docker-compose.yml` (ver informe).
 2. Ejecutar semilleros de datos.
-3. Correr `npm run test:ci` y `phpunit` en paralelo.
+3. Correr `pytest tests/functional -m functional` y `phpunit` en paralelo.
 4. Publicar reportes Allure y Word como artefactos.
 
 ## Notas
