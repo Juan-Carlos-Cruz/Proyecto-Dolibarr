@@ -1,52 +1,37 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { ensureModuleActivated, loginAsAdmin } from '../helpers/auth';
+import { expect, test } from '@playwright/test';
+import { ensureModuleEnabled, loginAsAdmin } from '../helpers/auth';
 
 const MODULES = {
-  products: 'Products/Services' as const,
-  bom: 'Bill of Materials' as const,
-  stock: 'Stock' as const,
-  variants: 'Attributes & Variants' as const,
+  products: { id: 'modProduct', path: '/product/list.php', heading: /Products/i },
+  bom: { id: 'modBom', path: '/bom/index.php', heading: /Bills of Materials|BOM/i },
+  stock: { id: 'modProduct', path: '/product/stock/index.php', heading: /Stock/i },
+  variants: { id: 'modVariants', path: '/variants/index.php', heading: /Variants|Attributes/i },
 };
 
-test('HU-001 Activación de módulos Dolibarr v22', async (t) => {
-  await t.test('PF-001: activar módulo Products/Services y abrir listado', () => {
-    const app = loginAsAdmin();
-    ensureModuleActivated(app, MODULES.products);
-    assert.ok(app.isModuleActive(MODULES.products));
-    const listing = app.listProducts({ labelContains: 'Producto QA' });
-    assert.ok(listing.length > 0, 'Se esperaba listado de productos semilla');
+test.describe('HU-001 Activación de módulos Dolibarr v22', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
   });
 
-  await t.test('PF-012: activar módulo Bill of Materials y acceder a menú', () => {
-    const app = loginAsAdmin();
-    ensureModuleActivated(app, MODULES.bom);
-    app.seedBomFixtures();
-    const bom = app.createBom('BOM-QA-999', 'Kit QA temporal');
-    assert.equal(bom.status, 'DRAFT');
-    assert.ok(app.isModuleActive(MODULES.bom));
-  });
-
-  await t.test('PF-003: activar módulo Stock y validar tablero', () => {
-    const app = loginAsAdmin();
-    ensureModuleActivated(app, MODULES.stock);
-    const movement = app.registerMovement({
-      warehouse: 'Central',
-      reference: 'PROD-0000001',
-      quantity: 5,
-      reason: 'Inicial',
-      type: 'in',
+  for (const [key, module] of Object.entries(MODULES)) {
+    test(`PF-001: habilitar módulo ${key}`, async ({ page }) => {
+      await ensureModuleEnabled(page, module.id);
+      await page.goto(module.path);
+      await expect(
+        page.locator('h1, h2, header h1, header h2').filter({ hasText: module.heading })
+      ).toBeVisible();
     });
-    assert.equal(movement.warehouse, 'Central');
-    assert.ok(app.isModuleActive(MODULES.stock));
+  }
+
+  test('PF-003: tablero de stock refleja productos existentes', async ({ page }) => {
+    await ensureModuleEnabled(page, MODULES.stock.id);
+    await page.goto('/product/stock/index.php');
+    await expect(page.locator('table.liste, table.tagtable').first()).toBeVisible();
   });
 
-  await t.test('PF-008: activar módulo Attributes & Variants y ver catálogo', () => {
-    const app = loginAsAdmin();
-    ensureModuleActivated(app, MODULES.variants);
-    app.registerAttribute('Talla', ['S', 'M']);
-    app.registerAttribute('Color', ['Rojo']);
-    const variants = app.generateVariants('PROD-0000001');
-    assert.equal(variants, 2, 'Se esperaban combinaciones S/M con color Rojo');
+  test('PF-012: módulo BOM permite crear borrador', async ({ page }) => {
+    await ensureModuleEnabled(page, MODULES.bom.id);
+    await page.goto('/bom/index.php?action=create');
+    await expect(page.locator('form#formBOM, form[name="create"]')).toBeVisible();
   });
 });

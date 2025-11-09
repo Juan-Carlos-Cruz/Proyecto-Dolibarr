@@ -4,12 +4,13 @@
   "private": true,
   "description": "Automation suite for Dolibarr v22 products and BOM modules.",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/playwright/tests/*.js",
-    "test:ci": "npm run test",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:report": "npx playwright show-report",
     "report:word": "python3 scripts/generate_word_report.py"
   },
   "devDependencies": {
+    "@playwright/test": "^1.45.0",
     "typescript": "^5.4.5"
   }
 }
