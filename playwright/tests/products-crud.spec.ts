@@ -1,0 +1,28 @@
+import { test, expect } from '@playwright/test';
+import { loginAsAdmin } from '../helpers/auth';
+import { productSeeds } from '../fixtures/test-data';
+
+test.describe('HU-002 Productos físicos CRUD', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.getByRole('link', { name: /Productos|Products/i }).click();
+  });
+
+  for (const seed of productSeeds.slice(0, 10)) {
+    test(`PF-002: crear producto ${seed.reference}`, async ({ page }) => {
+      await page.getByRole('button', { name: /Nuevo producto|New product/i }).click();
+      await page.getByLabel(/Etiqueta|Label/i).fill(seed.label);
+      await page.getByLabel(/Tipo/i).selectOption(seed.type === 'product' ? '0' : '1');
+      await page.getByLabel(/Referencia|Ref\./i).fill(seed.reference);
+      await page.getByLabel(/Peso/i).fill(seed.weight.toString());
+      await page.getByLabel(/Tamaño|Size/i).fill(seed.size);
+      await page.getByLabel(/Código arancelario|HTS/i).fill(seed.hts);
+      await page.getByRole('button', { name: /Guardar|Save/i }).click();
+      await expect(page.getByRole('heading', { name: seed.label })).toBeVisible();
+      await page.getByRole('button', { name: /Modificar|Edit/i }).click();
+      await page.getByLabel(/Estado|Status/i).selectOption('0');
+      await page.getByRole('button', { name: /Guardar|Save/i }).click();
+      await expect(page.getByText(/Status.*Inactivo|Status.*Disabled/i)).toBeVisible();
+    });
+  }
+});
