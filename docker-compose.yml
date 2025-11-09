@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: mariadb:10.6
+    container_name: dolibarr_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dolibarr
+      MYSQL_USER: dolibarr
+      MYSQL_PASSWORD: dolibarr
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  dolibarr:
+    image: dolibarr/dolibarr:22.0.2
+    container_name: dolibarr_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DOLI_DB_HOST: db
+      DOLI_DB_PORT: 3306
+      DOLI_DB_NAME: dolibarr
+      DOLI_DB_USER: dolibarr
+      DOLI_DB_PASSWORD: dolibarr
+      DOLI_ADMIN_LOGIN: admin
+      DOLI_ADMIN_PASSWORD: admin
+      DOLI_URL_ROOT: http://localhost:8080
+      PHP_INI_MEMORY_LIMIT: 512M
+      PHP_INI_MAX_EXECUTION_TIME: 120
+    ports:
+      - "8080:80"
+    volumes:
+      - dolibarr_documents:/var/www/html/documents
+      - ./docker/dolibarr/custom:/var/www/html/custom
+      - ./docker/dolibarr/conf:/var/www/html/conf
+      - ./docker/dolibarr/modules:/var/www/html/htdocs/module_packages
+
+volumes:
+  db_data:
+  dolibarr_documents:
