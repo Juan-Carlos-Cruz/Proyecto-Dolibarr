@@ -1,0 +1,13 @@
+{
+  "name": "dolibarr/quality-suite",
+  "description": "PHPUnit configuration for Dolibarr v22 quality gates",
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "phpoffice/phpword": "^1.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Dolibarr\\Tests\\": "phpunit/tests/"
+    }
+  }
+}
