@@ -37,8 +37,8 @@ export const bomSeeds = [
     label: 'Kit producto QA 1',
     status: 'DRAFT',
     lines: [
-      { reference: 'PROD-0000001', quantity: 2, type: 'product' },
-      { reference: 'PROD-0000005', quantity: 1, type: 'product' }
+      { reference: 'PROD-0000001', quantity: 2, type: 'product' as const },
+      { reference: 'PROD-0000005', quantity: 1, type: 'product' as const }
     ]
   },
   {
@@ -46,8 +46,8 @@ export const bomSeeds = [
     label: 'Kit servicio QA',
     status: 'DRAFT',
     lines: [
-      { reference: 'PROD-0000002', quantity: 1, type: 'service' },
-      { reference: 'PROD-0000003', quantity: 3, type: 'product' }
+      { reference: 'PROD-0000002', quantity: 1, type: 'service' as const },
+      { reference: 'PROD-0000003', quantity: 3, type: 'product' as const }
     ]
   }
 ];

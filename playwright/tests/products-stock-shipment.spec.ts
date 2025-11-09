@@ -1,20 +1,26 @@
-import { test, expect } from '@playwright/test';
-import { loginAsAdmin, ensureModuleActivated } from '../helpers/auth';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { loginAsAdmin } from '../helpers/auth';
 
-const PRODUCTS_MODULE_PATTERN = /(Products?\s*\/\s*Services?)|(Productos?\s*\/\s*Servicios?)/i;
-const STOCK_MODULE_PATTERN = /(Stock management)|(Gestión de stocks)|(Almac[eé]n)/i;
-
-test.describe('HU-003 Stock vs Shipment visibility', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-    await ensureModuleActivated(page, PRODUCTS_MODULE_PATTERN);
-    await ensureModuleActivated(page, STOCK_MODULE_PATTERN);
-    await page.goto('/');
+test('HU-003 Stock vs Shipment visibility', async (t) => {
+  await t.test('PF-003: verificar visibilidad de productos y servicios', () => {
+    const app = loginAsAdmin();
+    const visibility = app.getStockVisibility();
+    assert.ok(visibility.included.some((label) => label.includes('Producto QA')));
+    assert.ok(visibility.excluded.some((label) => label.includes('Servicio QA')));
   });
 
-  test('PF-003: verificar visibilidad de productos y servicios', async ({ page }) => {
-    await page.getByRole('link', { name: /Almacén|Stock/i }).click();
-    await expect(page.locator('#id-right table')).toContainText(/Producto QA/);
-    await expect(page.locator('#id-right table')).not.toContainText(/Servicio QA/);
+  await t.test('PF-003: crear envío solo para productos físicos', () => {
+    const app = loginAsAdmin();
+    app.registerMovement({
+      warehouse: 'Central',
+      reference: 'PROD-0000001',
+      quantity: 5,
+      reason: 'Preparación',
+      type: 'in',
+    });
+    const shipment = app.createShipment('PROD-0000001', 2);
+    assert.equal(shipment.status, 'SHIPPED');
+    assert.throws(() => app.createShipment('PROD-0000005', 1), /Only physical products can be shipped/);
   });
 });
