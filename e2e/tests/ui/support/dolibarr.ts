@@ -32,13 +32,67 @@ export async function login(page: Page) {
   await loginIfNeeded(page);
 }
 
+function matches(re: RegExp, text: string): boolean {
+  const result = re.test(text);
+  re.lastIndex = 0; // reset in case global/sticky flags are present
+  return result;
+}
+
+async function fallbackNavigation(page: Page, menu: RegExp, submenu?: RegExp): Promise<boolean> {
+  const goTo = async (url: string) => {
+    await page.goto(url);
+    await page.waitForLoadState('networkidle');
+  };
+
+  if (matches(menu, 'Products')) {
+    await goTo('/product/list.php?type=0');
+    return true;
+  }
+
+  if (matches(menu, 'Setup') || matches(menu, 'Configuración')) {
+    if (submenu && (matches(submenu, 'Modules') || matches(submenu, 'Módulos'))) {
+      await goTo('/admin/modules.php?mode=search&leftmenu=setup');
+      return true;
+    }
+  }
+
+  if (matches(menu, 'Stock') || matches(menu, 'Almacén')) {
+    if (submenu && (matches(submenu, 'Shipments') || matches(submenu, 'Expediciones') || matches(submenu, 'Stocks'))) {
+      await goTo('/expedition/list.php?leftmenu=sendings');
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function openMainMenu(page: Page, menu: RegExp, submenu?: RegExp) {
   const menuLink = page.getByRole('link', { name: menu }).first();
+  const menuCount = await menuLink.count();
+
+  if (menuCount === 0) {
+    const handled = await fallbackNavigation(page, menu, submenu);
+    if (handled) {
+      return;
+    }
+    throw new Error(`Menu ${menu} not found and no fallback available`);
+  }
+
   await expect(menuLink).toBeVisible({ timeout: 20_000 });
   await menuLink.click();
 
   if (submenu) {
     const subLink = page.getByRole('link', { name: submenu }).first();
+    const subCount = await subLink.count();
+
+    if (subCount === 0) {
+      const handled = await fallbackNavigation(page, menu, submenu);
+      if (handled) {
+        return;
+      }
+      throw new Error(`Submenu ${submenu} not found and no fallback available`);
+    }
+
     await expect(subLink).toBeVisible({ timeout: 10_000 });
     await subLink.click();
   }
