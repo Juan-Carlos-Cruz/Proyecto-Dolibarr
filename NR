@@ -1,0 +1,160 @@
+import { test, expect } from '@playwright/test';
+import { pairwise, Factors, Row } from '../../oa/pairwise';
+
+// ----------------------
+// Factors (orthogonal)
+// ----------------------
+const factors: Factors = {
+  EntityType: ['Company', 'Individual'],
+  Customer: ['Yes', 'No'],
+  Supplier: ['Yes', 'No'],
+  Prospect: ['Yes', 'No'],
+  Country: ['Spain', 'France', 'United States', 'Colombia'],
+  Email: ['valid', 'empty'],
+  PhoneType: ['local', 'intl'],
+  // ✅ Nuevo factor para “completar” tu diseño: Status (Active/Closed)
+  Status: ['Active', 'Closed'],
+};
+
+// ----------------------
+// Business constraint
+// ----------------------
+function constraint(r: Row): boolean {
+  // Prospect cannot be Yes if Customer is No
+  return !(r.Prospect === 'Yes' && r.Customer === 'No');
+}
+
+const cases = pairwise(factors, constraint);
+
+// ----------------------
+// Utilities
+// ----------------------
+function phoneOf(kind: string) {
+  return kind === 'intl' ? '+1 202 555 0101' : '555123456';
+}
+
+// values from your DOM (id=selectcountry_id)
+const countryValue: Record<string, string> = {
+  Spain: '4',
+  France: '1',
+  'United States': '11',
+  Colombia: '70',
+};
+
+// map “EntityType” to Dolibarr “typent_id”
+const typentValue: Record<string, string> = {
+  Company: '3',
+  Individual: '8',
+};
+
+// map Customer/Prospect to #customerprospect values (from your DOM)
+function customerProspectValue(customer: string, prospect: string): string {
+  if (customer === 'Yes' && prospect === 'Yes') return '3'; // Prospect/Customer
+  if (customer === 'Yes' && prospect === 'No') return '1';  // Customer
+  if (customer === 'No'  && prospect === 'Yes') return '2'; // Prospect (filtrado por constraint, pero seguro)
+  return '0'; // Neither
+}
+
+// map Status to #status values (from your DOM: 1=Active, 0=Closed)
+const statusValue: Record<string, string> = {
+  Active: '1',
+  Closed: '0',
+};
+
+async function loginIfNeeded(page, user = process.env.DOLI_USER || 'admin', pass = process.env.DOLI_PASS || 'admin') {
+  await page.goto('/user/login.php?lang=en_US'); // fija cookie/idioma
+  const userInput = page.locator('input[name="username"], input[name="userlogin"], input#username').first();
+  const passInput = page.locator('input[name="password"], input#password').first();
+  const isVisible = await userInput.isVisible().catch(() => false);
+  if (!isVisible) return; // ya logueado
+  await userInput.fill(user);
+  await passInput.fill(pass);
+  await page.locator('button[type="submit"], input[type="submit"]').first().click();
+  await page.waitForLoadState('networkidle');
+  if (await userInput.isVisible().catch(() => false)) {
+    throw new Error('Login failed');
+  }
+}
+
+// Select2 helper: selecciona siempre en el <select> real
+async function s2(page, selector: string, value: string) {
+  const sel = page.locator(selector);
+  await expect(sel).toBeVisible();
+  await sel.selectOption(value);
+}
+
+// ----------------------
+// Test
+// ----------------------
+test.describe('Third-parties > Create third party (pairwise t=2) + Status factor', () => {
+  for (let i = 0; i < cases.length; i++) {
+    const row = cases[i];
+
+    test(`[${i + 1}/${cases.length}] ${row.EntityType} / C:${row.Customer} / S:${row.Supplier} / P:${row.Prospect} / ${row.Country} / ${row.Email} / ${row.PhoneType} / Status:${row.Status}`, async ({ page }, info) => {
+      info.annotations.push({ type: 'feature', description: 'Third parties' });
+      info.annotations.push({ type: 'severity', description: 'critical' });
+
+      // 1) Login if needed
+      await loginIfNeeded(page);
+
+      // 2) Go to list and click "create"
+      await page.goto('/societe/list.php?type=0');
+      const createLink = page.locator('a[href="/societe/card.php?action=create"]').first();
+      await expect(createLink).toBeVisible({ timeout: 10_000 });
+      await createLink.click();
+
+      // 3) Unique short name
+      const shortName = `QA-OA-${Date.now()}-${i}`;
+
+      // ---- Fill REQUIRED fields by ID/NAME (language-agnostic) ----
+      // Third-party name
+      const name = page.locator('#name, input[name="name"]').first();
+      await expect(name).toBeVisible({ timeout: 10_000 });
+      await name.fill(shortName);
+
+      // Alias (optional)
+      const alias = page.locator('#name_alias_input, input[name="name_alias"]').first();
+      if (await alias.isVisible().catch(() => false)) {
+        await alias.fill(`Alias ${shortName}`);
+      }
+
+      // Customer/Prospect
+      await s2(page, '#customerprospect', customerProspectValue(row.Customer, row.Prospect));
+
+      // ✅ Nuevo: Status (Active/Closed)
+      await s2(page, '#status', statusValue[row.Status]);
+
+      // Address minimums
+      await page.locator('#address, textarea[name="address"]').fill('Gran Vía 1');
+      await page.locator('#zipcode, input[name="zipcode"]').fill('28001');
+      await page.locator('#town, input[name="town"]').fill('Madrid');
+
+      // Country
+      await s2(page, '#selectcountry_id', countryValue[row.Country]);
+
+      // Phone & Email
+      await page.locator('#phone, input[name="phone"]').fill(phoneOf(row.PhoneType));
+      const email = page.locator('#email, input[name="email"]').first();
+      if (await email.isVisible().catch(() => false)) {
+        if (row.Email === 'valid') await email.fill(`qa.${i}@example.com`);
+        else await email.fill('');
+      }
+
+      // Third-party type (company vs individual)
+      await s2(page, '#typent_id', typentValue[row.EntityType]);
+
+      // 4) Save
+      const saveBtn = page
+        .locator('form button[type="submit"], form input[type="submit"]')
+        .or(page.getByRole('button', { name: /create|guardar|créer/i }))
+        .first();
+      await expect(saveBtn).toBeVisible({ timeout: 10_000 });
+      await saveBtn.click();
+
+      // 5) Verify
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).not.toContain('card.php?action=create');
+      await expect(page.getByText(shortName, { exact: false })).toBeVisible({ timeout: 30_000 });
+    });
+  }
+});

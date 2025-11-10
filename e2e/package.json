@@ -1,0 +1,16 @@
+{
+  "name": "dolibarr-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deps": "npm i -D @playwright/test@1.56.0 allure-playwright allure-commandline && npx playwright install --with-deps",
+    "test:setup": "npx playwright test tests/setup/auth.setup.spec.ts",
+    "test:e2e": "npx playwright test",
+    "report:allure": "npx allure generate report/allure-results -o report/allure-report --clean"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "allure-commandline": "^2.34.1",
+    "allure-playwright": "^2.15.1"
+  }
+}

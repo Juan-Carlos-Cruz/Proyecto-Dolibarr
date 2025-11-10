@@ -1,0 +1,268 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e5]:
+      - text: 
+      - listitem [ref=e6]:
+        - generic [ref=e7]:
+          - link "" [ref=e8] [cursor=pointer]:
+            - /url: /index.php?mainmenu=home&leftmenu=home
+            - generic [ref=e10]: 
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /index.php?mainmenu=home&leftmenu=home
+      - listitem [ref=e12]:
+        - generic [ref=e13]:
+          - link "" [ref=e14] [cursor=pointer]:
+            - /url: /societe/index.php?mainmenu=companies&leftmenu=
+            - generic [ref=e16]: 
+          - link "Third-parties" [ref=e17] [cursor=pointer]:
+            - /url: /societe/index.php?mainmenu=companies&leftmenu=
+      - listitem [ref=e18]:
+        - generic [ref=e19]:
+          - link "" [ref=e20] [cursor=pointer]:
+            - /url: /core/tools.php?mainmenu=tools&leftmenu=
+            - generic [ref=e22]: 
+          - link "Tools" [ref=e23] [cursor=pointer]:
+            - /url: /core/tools.php?mainmenu=tools&leftmenu=
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic "Show page to print main content area" [ref=e27]:
+          - link "" [ref=e28] [cursor=pointer]:
+            - /url: /societe/card.php?&token=67d15738fd6148bc1ed7d650e9d6af33&backtopage=%2Fsociete%2Fcard.php%3Fid%3D__ID__&private=0&LastName=Third-party+name+%2F+Last+name&ThirdPartyName=Third-party+name&code_auto=1&name=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&name_alias=Alias+1762734528668-6&client=2&customer_code=CU2511-00010&status=1&address=Gran+V%C3%ADa+1&zipcode=28001&town=Madrid&country_id=11&state_id=0&phone=%2B1+202+555+0101&email=foo%40%40bar&assujtva_value=1&typent_id=8&effectif_id=0&forme_juridique_code=0&parent_company_id=-1&commercial_multiselect=1&commercial[]=1&save=Create+third+party&optioncss=print
+            - generic [ref=e29]: 
+        - generic "Read online help (Internet access needed), <br><span class=\"fas fa-external-link-alt pictofixedwidth\" style=\"\"></span>Wiki page \"Module Third Parties\" <span class=\"opacitymedium\">(Dedicated help page related to your current screen)</span>" [ref=e31]:
+          - link " " [ref=e32] [cursor=pointer]:
+            - /url: http://wiki.dolibarr.org/index.php/Module_Third_Parties
+            - generic [ref=e33]: 
+            - generic [ref=e34]: 
+        - generic "Dolibarr 19.0.2" [ref=e36]:
+          - generic [ref=e37]: 19.0.2
+        - generic: 
+      - generic [ref=e40]:
+        - link "No photo admin " [ref=e41] [cursor=pointer]:
+          - /url: /user/card.php?id=1
+          - img "No photo" [ref=e42]
+          - generic [ref=e43]: admin
+          - text: 
+        - text:        
+  - generic [ref=e44]:
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - combobox [ref=e49]
+        - combobox "Search" [ref=e52] [cursor=pointer]:
+          - textbox [ref=e53]
+      - link " My Dashboard" [ref=e56] [cursor=pointer]:
+        - /url: /index.php?mainmenu=home&leftmenu=home
+        - generic [ref=e57]: 
+        - text: My Dashboard
+      - generic [ref=e58]:
+        - link " Setup" [ref=e60] [cursor=pointer]:
+          - /url: /admin/index.php?mainmenu=home&leftmenu=setup
+          - generic [ref=e61]: 
+          - text: Setup
+        - link "Company/Organization " [ref=e63] [cursor=pointer]:
+          - /url: /admin/company.php?mainmenu=home
+          - text: Company/Organization
+          - generic "Click here to setup main parameters" [ref=e64]: 
+        - link "Modules/Applications" [ref=e66] [cursor=pointer]:
+          - /url: /admin/modules.php?mainmenu=home
+        - link "Display" [ref=e68] [cursor=pointer]:
+          - /url: /admin/ihm.php?mainmenu=home
+        - link "Menus" [ref=e70] [cursor=pointer]:
+          - /url: /admin/menus.php?mainmenu=home
+        - link "Translation" [ref=e72] [cursor=pointer]:
+          - /url: /admin/translation.php?mainmenu=home
+        - link "Default values/filters/sorting" [ref=e74] [cursor=pointer]:
+          - /url: /admin/defaultvalues.php?mainmenu=home
+        - link "Widgets" [ref=e76] [cursor=pointer]:
+          - /url: /admin/boxes.php?mainmenu=home
+        - link "Alerts" [ref=e78] [cursor=pointer]:
+          - /url: /admin/delais.php?mainmenu=home
+        - link "Security" [ref=e80] [cursor=pointer]:
+          - /url: /admin/security_other.php?mainmenu=home
+        - link "Limits and accuracy" [ref=e82] [cursor=pointer]:
+          - /url: /admin/limits.php?mainmenu=home
+        - link "PDF" [ref=e84] [cursor=pointer]:
+          - /url: /admin/pdf.php?mainmenu=home
+        - link "Emails" [ref=e86] [cursor=pointer]:
+          - /url: /admin/mails.php?mainmenu=home
+        - link "SMS" [ref=e88] [cursor=pointer]:
+          - /url: /admin/sms.php?mainmenu=home
+        - link "Dictionaries" [ref=e90] [cursor=pointer]:
+          - /url: /admin/dict.php?mainmenu=home
+        - link "Other Setup" [ref=e92] [cursor=pointer]:
+          - /url: /admin/const.php?mainmenu=home
+      - link " Admin Tools" [ref=e95] [cursor=pointer]:
+        - /url: /admin/tools/index.php?mainmenu=home&leftmenu=admintools
+        - generic [ref=e96]: 
+        - text: Admin Tools
+      - link " Users & Groups" [ref=e99] [cursor=pointer]:
+        - /url: /user/home.php?leftmenu=users
+        - generic [ref=e100]: 
+        - text: Users & Groups
+    - generic [ref=e104]:
+      - table [ref=e105]:
+        - rowgroup [ref=e106]:
+          - row " New Third Party (prospect, customer, vendor)" [ref=e107]:
+            - cell "" [ref=e108]:
+              - generic [ref=e109]: 
+            - cell "New Third Party (prospect, customer, vendor)" [ref=e110]:
+              - generic [ref=e111]: New Third Party (prospect, customer, vendor)
+      - generic [ref=e112]:
+        - table [ref=e114]:
+          - rowgroup [ref=e115]:
+            - row "Third-party name XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" [ref=e116]:
+              - cell "Third-party name" [ref=e117]
+              - cell "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" [ref=e118]:
+                - textbox [active] [ref=e119]: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+            - row "Alias name (commercial, trademark, ...) Alias 1762734528668-6" [ref=e120]:
+              - cell "Alias name (commercial, trademark, ...)" [ref=e121]
+              - cell "Alias 1762734528668-6" [ref=e122]:
+                - textbox "Alias name (commercial, trademark, ...)" [ref=e123]: Alias 1762734528668-6
+            - row "Prospect / Customer Prospect Customer Code CU2511-00010 " [ref=e124]:
+              - cell "Prospect / Customer" [ref=e125]
+              - cell "Prospect" [ref=e126]:
+                - combobox [ref=e127]
+                - combobox "Prospect" [ref=e130] [cursor=pointer]:
+                  - textbox "Prospect" [ref=e131]
+              - cell "Customer Code" [ref=e132]
+              - cell "CU2511-00010 " [ref=e133]:
+                - table [ref=e134]:
+                  - rowgroup [ref=e135]:
+                    - row "CU2511-00010 " [ref=e136]:
+                      - cell "CU2511-00010" [ref=e137]:
+                        - textbox [ref=e138]: CU2511-00010
+                      - cell "" [ref=e139]:
+                        - 'generic "Customer Code, unique for all customers<br>Validity controlled by the module: <b>Monkey</b><br><br><u>Rules for this module:</u><br>Required if third party is a customer or prospect: <span class=\"ok\">No</span><br>Can be modified if valid: <span class=\"ok\">Yes</span><br>Can be modified if not valid: <span class=\"ok\">Yes</span><br>Automatic code: <span class=\"ok\">Yes</span><br><br>Next value: <b>CU2511-00010</b><br>" [ref=e140]':
+                          - generic [ref=e141]: 
+            - row "Status Open" [ref=e142]:
+              - cell "Status" [ref=e143]
+              - cell "Open" [ref=e144]:
+                - combobox [ref=e145]
+                - combobox "Open" [ref=e148] [cursor=pointer]:
+                  - textbox "Open" [ref=e149]
+            - row "Address Gran Vía 1" [ref=e150]:
+              - cell "Address" [ref=e151]
+              - cell "Gran Vía 1" [ref=e152]:
+                - textbox [ref=e153]: Gran Vía 1
+            - row "Zip Code 28001 City Madrid" [ref=e154]:
+              - cell "Zip Code" [ref=e155]
+              - cell "28001" [ref=e156]:
+                - textbox [ref=e157]: "28001"
+              - cell "City" [ref=e158]
+              - cell "Madrid" [ref=e159]:
+                - textbox [ref=e160]: Madrid
+            - row "Country  United States (US) " [ref=e161]:
+              - cell "Country" [ref=e162]
+              - cell " United States (US) " [ref=e163]:
+                - generic [ref=e164]: 
+                - combobox [ref=e165]
+                - combobox "United States (US)" [ref=e168] [cursor=pointer]:
+                  - textbox "United States (US)" [ref=e169]
+                - generic "You can change values for this list from menu Setup - Dictionaries" [ref=e170]: 
+            - row "State/Province  " [ref=e171]:
+              - cell "State/Province" [ref=e172]
+              - cell " " [ref=e173]:
+                - generic [ref=e174]: 
+                - combobox [ref=e175]
+                - combobox [ref=e178] [cursor=pointer]:
+                  - textbox [ref=e179]
+                - generic "You can change values for this list from menu Setup - Dictionaries" [ref=e180]: 
+            - row "Phone  +1 202 555 0101 Fax " [ref=e181]:
+              - cell "Phone" [ref=e182]
+              - cell " +1 202 555 0101" [ref=e183]:
+                - generic [ref=e184]: 
+                - textbox [ref=e185]: +1 202 555 0101
+              - cell "Fax" [ref=e186]
+              - cell "" [ref=e187]:
+                - generic [ref=e188]: 
+                - textbox [ref=e189]
+            - row "EMail  foo@@bar" [ref=e190]:
+              - cell "EMail" [ref=e191]
+              - cell " foo@@bar" [ref=e192]:
+                - generic [ref=e193]: 
+                - textbox [ref=e194]: foo@@bar
+            - row "Web " [ref=e195]:
+              - cell "Web" [ref=e196]
+              - cell "" [ref=e197]:
+                - generic [ref=e198]: 
+                - textbox [ref=e199]
+            - row "Prof Id (FEIN)" [ref=e200]:
+              - cell "Prof Id (FEIN)" [ref=e201]
+              - cell [ref=e202]:
+                - textbox [ref=e203]
+              - cell [ref=e204]
+            - row "Sales tax used VAT ID" [ref=e205]:
+              - cell "Sales tax used" [ref=e206]
+              - cell [ref=e207]:
+                - checkbox [checked] [ref=e208]
+              - cell "VAT ID" [ref=e209]
+              - cell [ref=e210]:
+                - textbox [ref=e211]
+            - row "Third-party type Private individual  Workforce " [ref=e212]:
+              - cell "Third-party type" [ref=e213]
+              - cell "Private individual " [ref=e214]:
+                - combobox [ref=e215]
+                - combobox "Private individual" [ref=e218] [cursor=pointer]:
+                  - textbox "Private individual" [ref=e219]
+                - generic "You can change values for this list from menu Setup - Dictionaries" [ref=e220]: 
+              - cell "Workforce" [ref=e221]
+              - cell "" [ref=e222]:
+                - combobox [ref=e223]
+                - combobox [ref=e226] [cursor=pointer]:
+                  - textbox [ref=e227]
+                - generic "You can change values for this list from menu Setup - Dictionaries" [ref=e228]: 
+            - row "Business entity type " [ref=e229]:
+              - cell "Business entity type" [ref=e230]
+              - cell "" [ref=e231]:
+                - generic [ref=e232]:
+                  - combobox [ref=e233]
+                  - combobox [ref=e236] [cursor=pointer]:
+                    - textbox [ref=e237]
+                  - generic "You can change values for this list from menu Setup - Dictionaries" [ref=e238]: 
+            - row "Capital Euros" [ref=e239]:
+              - cell "Capital" [ref=e240]
+              - cell "Euros" [ref=e241]:
+                - textbox [ref=e242]
+                - text: Euros
+            - row "Parent company  Select a third party" [ref=e243]:
+              - cell "Parent company" [ref=e244]
+              - cell " Select a third party" [ref=e245]:
+                - generic [ref=e246]: 
+                - combobox [ref=e247]
+                - combobox "Select a third party" [ref=e250] [cursor=pointer]:
+                  - textbox "Select a third party" [ref=e251]
+            - row "Assigned to sales representative " [ref=e252]:
+              - cell "Assigned to sales representative" [ref=e253]
+              - cell "" [ref=e254]:
+                - generic [ref=e255]: 
+                - listbox [ref=e256]:
+                  - option [selected] [ref=e257]: SuperAdmin
+                - combobox [ref=e260]:
+                  - list [ref=e261]:
+                    - listitem "SuperAdmin" [ref=e262]: × SuperAdmin
+                    - listitem [ref=e263]:
+                      - searchbox [ref=e264]
+            - row "Logo Choose File" [ref=e265]:
+              - cell "Logo" [ref=e266]
+              - cell "Choose File" [ref=e267]:
+                - button "Choose File" [ref=e268]
+        - generic [ref=e269]:
+          - button "Create third party" [ref=e270] [cursor=pointer]
+          - button "Cancel" [ref=e271] [cursor=pointer]
+  - status [ref=e272]
+  - status [ref=e273]
+  - generic [ref=e275]:
+    - generic [ref=e277] [cursor=pointer]: ×
+    - generic [ref=e279]: Email address foo@@bar is incorrect
+  - log [ref=e280]
+  - log [ref=e281]
+  - log [ref=e282]
+  - log [ref=e283]
+  - log [ref=e284]
+  - log [ref=e285]
+  - log [ref=e286]
+  - log [ref=e287]
+```
