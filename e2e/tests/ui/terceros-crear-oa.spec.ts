@@ -152,12 +152,14 @@ test.describe('Third-parties > Create third party (Taguchi L12) – sin VAT', ()
     await page.close();
   });
 
+  test.beforeEach(async ({ page }) => {
+    await loginIfNeeded(page);
+  });
+
   for (let i = 0; i < L12.length; i++) {
     const run = L12[i];
 
     test(`[${i+1}/12] L12 run`, async ({ page }) => {
-      await loginIfNeeded(page);
-
       const row = mapRunToRow(run, i);
 
       // Ir a crear
