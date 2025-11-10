@@ -3,6 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests',
   timeout: 120_000,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  expect: {
+    timeout: 10_000,
+  },
   use: {
     baseURL: process.env.BASE_URL || 'http://dolibarr:80',
     trace: 'on-first-retry',
