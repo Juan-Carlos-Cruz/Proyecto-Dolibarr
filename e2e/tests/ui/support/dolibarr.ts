@@ -5,20 +5,31 @@ import { expect, Page } from '@playwright/test';
  * layer consistent across specs so that selectors are resilient against
  * translations and small layout variations between minor versions.
  */
-export async function login(page: Page) {
+export async function loginIfNeeded(page: Page, {
+  user = process.env.DOLI_USER || 'admin',
+  pass = process.env.DOLI_PASS || 'admin',
+}: {
+  user?: string;
+  pass?: string;
+} = {}) {
   await page.goto('/user/login.php?lang=en_US');
   const loginField = page.locator('input[name="username"], input[name="userlogin"], #username').first();
   const passwordField = page.locator('input[name="password"], #password').first();
 
   if (!(await loginField.isVisible().catch(() => false))) {
-    return; // already logged in via storage state
+    return false; // already logged in via storage state or cookie
   }
 
-  await loginField.fill(process.env.DOLI_USER || 'admin');
-  await passwordField.fill(process.env.DOLI_PASS || 'admin');
+  await loginField.fill(user);
+  await passwordField.fill(pass);
   await page.locator('button[type="submit"], input[type="submit"]').first().click();
   await page.waitForLoadState('networkidle');
   await expect(loginField).not.toBeVisible();
+  return true;
+}
+
+export async function login(page: Page) {
+  await loginIfNeeded(page);
 }
 
 export async function openMainMenu(page: Page, menu: RegExp, submenu?: RegExp) {

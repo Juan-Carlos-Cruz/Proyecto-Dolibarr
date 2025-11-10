@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { loginIfNeeded, selectOption } from './support/dolibarr';
 
 /**
  * ======================================================
@@ -53,28 +54,6 @@ const L12: Run[] = [
 ];
 
 function lvl<T>(l: Lvl, v1: T, v2: T): T { return l===1 ? v1 : v2; }
-
-// =====================
-// Helpers
-// =====================
-async function loginIfNeeded(page, user = process.env.DOLI_USER || 'admin', pass = process.env.DOLI_PASS || 'admin') {
-  await page.goto('/user/login.php?lang=en_US'); // fija cookie/idioma
-  const userInput = page.locator('input[name="username"], input[name="userlogin"], #username').first();
-  const passInput = page.locator('input[name="password"], #password').first();
-  if (!(await userInput.isVisible().catch(() => false))) return;
-  await userInput.fill(user);
-  await passInput.fill(pass);
-  await page.locator('button[type="submit"], input[type="submit"]').first().click();
-  await page.waitForLoadState('networkidle');
-  if (await userInput.isVisible().catch(() => false)) throw new Error('Login failed');
-}
-
-// Select2: seleccionar SIEMPRE sobre el <select> real
-async function s2(page, selector: string, value: string) {
-  const sel = page.locator(selector);
-  await expect(sel).toBeVisible();
-  await sel.selectOption(value);
-}
 
 function phoneOf(kind: 'local'|'intl') {
   return kind === 'intl' ? '+1 202 555 0101' : '555123456';
@@ -148,14 +127,14 @@ async function createSeedIfMissing(page) {
     await createLink.click();
     await page.locator('#name, input[name="name"]').fill(DUP_SEED);
     // customerprospect: 0=neither, 1=Customer, 2=Prospect, 3=Prospect/Customer
-    await s2(page, '#customerprospect', '0');
+    await selectOption(page, '#customerprospect', '0');
     // status: 0=Closed, 1=Open
-    await s2(page, '#status', '1');
+    await selectOption(page, '#status', '1');
     await page.locator('#address').fill('Seed address');
     await page.locator('#zipcode').fill('28001');
     await page.locator('#town').fill('Madrid');
-    await s2(page, '#selectcountry_id', countryEUValue);
-    await s2(page, '#typent_id', typentValue['Company']);
+    await selectOption(page, '#selectcountry_id', countryEUValue);
+    await selectOption(page, '#typent_id', typentValue['Company']);
     const saveBtn = page.locator('form button[type="submit"], form input[type="submit"]').first();
     await saveBtn.click();
     await page.waitForLoadState('networkidle');
@@ -173,12 +152,14 @@ test.describe('Third-parties > Create third party (Taguchi L12) – sin VAT', ()
     await page.close();
   });
 
+  test.beforeEach(async ({ page }) => {
+    await loginIfNeeded(page);
+  });
+
   for (let i = 0; i < L12.length; i++) {
     const run = L12[i];
 
     test(`[${i+1}/12] L12 run`, async ({ page }) => {
-      await loginIfNeeded(page);
-
       const row = mapRunToRow(run, i);
 
       // Ir a crear
@@ -200,17 +181,17 @@ test.describe('Third-parties > Create third party (Taguchi L12) – sin VAT', ()
       }
 
       // Entity type
-      await s2(page, '#typent_id', typentValue[row.EntityType]);
+      await selectOption(page, '#typent_id', typentValue[row.EntityType]);
 
       // Customer/Prospect
       const custProsVal =
         row.Customer==='Yes' && row.Prospect==='Yes' ? '3' :
         row.Customer==='Yes' && row.Prospect==='No'  ? '1' :
         row.Customer==='No'  && row.Prospect==='Yes' ? '2' : '0';
-      await s2(page, '#customerprospect', custProsVal);
+      await selectOption(page, '#customerprospect', custProsVal);
 
       // Status
-      await s2(page, '#status', row.Status === 'Open' ? '1' : '0');
+      await selectOption(page, '#status', row.Status === 'Open' ? '1' : '0');
 
       // Dirección mínima
       await page.locator('#address, textarea[name="address"]').fill('Gran Vía 1');
@@ -218,7 +199,7 @@ test.describe('Third-parties > Create third party (Taguchi L12) – sin VAT', ()
       await page.locator('#town, input[name="town"]').fill('Madrid');
 
       // Country (EU/NonEU)
-      await s2(page, '#selectcountry_id', row.CountryValue);
+      await selectOption(page, '#selectcountry_id', row.CountryValue);
 
       // Teléfono y Email
       await page.locator('#phone, input[name="phone"]').fill(phoneOf(row.PhoneType));
