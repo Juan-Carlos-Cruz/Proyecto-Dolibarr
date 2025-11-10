@@ -5,12 +5,6 @@ playwright/allure-report/
 playwright/test-results/
 playwright/reports/*.log
 playwright/reports/*.xml
-e2e/auth/
-!e2e/auth/.gitkeep
-e2e/allure-results/
-e2e/report/
-!e2e/report/.gitkeep
-e2e/test-results/
 vendor/
 composer.lock
 dist/

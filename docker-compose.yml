@@ -9,17 +9,10 @@ services:
       MYSQL_PASSWORD: doli
     volumes:
       - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
 
   dolibarr:
-    image: dolibarr/dolibarr:22.0.1
-    depends_on:
-      db:
-        condition: service_healthy
+    image: tuxgasy/dolibarr:latest
+    depends_on: [db]
     ports: ["8080:80"]
     environment:
       DOLI_DB_HOST: db
@@ -30,34 +23,31 @@ services:
       DOLI_URL_ROOT: "http://host.docker.internal:8080"
       DOLI_ADMIN_LOGIN: "admin"
       DOLI_ADMIN_PASSWORD: "admin"
-      DOLI_MODULES: "societe,product,stock,bom,variants,propal,facture"
+      DOLI_MODULES: "societe"
     volumes:
       - ./dolibarr-custom:/var/www/html/custom
       - shared_allure_report:/var/www/html/custom/qa/reports
-    healthcheck:
-      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 80) ? 0 : 1);'"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
 
   e2e:
-    build:
-      context: .
-      dockerfile: docker/e2e/Dockerfile
+    image: mcr.microsoft.com/playwright:v1.56.0-jammy
     working_dir: /work
-    depends_on:
-      dolibarr:
-        condition: service_healthy
+    depends_on: [dolibarr]
     environment:
       BASE_URL: "http://dolibarr:80"
       DOLI_USER: "admin"
       DOLI_PASS: "admin"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     volumes:
       - ./e2e:/work
       - allure_results:/work/report/allure-results
       - shared_allure_report:/work/report/allure-report
-    command: ["sleep", "infinity"]
+    command: |
+      bash -c "
+        apt-get update &&
+        apt-get install -y openjdk-11-jdk &&
+        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 &&
+        export PATH=$$PATH:$$JAVA_HOME/bin &&
+        tail -f /dev/null
+      "
 
   allure:
     image: frankescobar/allure-docker-service

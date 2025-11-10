@@ -3,11 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bootstrap": "npm ci && npx playwright install --with-deps",
+    "deps": "npm i -D @playwright/test@1.56.0 allure-playwright allure-commandline && npx playwright install --with-deps",
     "test:setup": "npx playwright test tests/setup/auth.setup.spec.ts",
     "test:e2e": "npx playwright test",
-    "test": "npm run test:e2e",
-    "test:list": "npx playwright test --list",
     "report:allure": "npx allure generate report/allure-results -o report/allure-report --clean"
   },
   "devDependencies": {

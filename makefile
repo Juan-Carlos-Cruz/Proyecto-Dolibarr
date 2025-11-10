@@ -3,7 +3,6 @@ DC          := docker compose
 E2E_SERVICE := e2e
 ALLURE_SVC  := allure
 ALLURE_UI   := allure-ui
-BOOTSTRAP   := if [ ! -d node_modules ]; then npm ci; fi
 
 # Cambia la ruta si quieres un spec distinto por defecto
 SPEC        ?= tests/ui/terceros-crear-oa.spec.ts
@@ -36,10 +35,7 @@ clean:
 	$(DC) down -v
 
 # ====== E2E - Playwright ======
-.PHONY: bootstrap e2e-shell test test-all test-spec test-chromium test-firefox test-webkit test-headed
-
-bootstrap:
-	$(DC) run --rm $(E2E_SERVICE) bash -lc "npm ci && npx playwright install --with-deps"
+.PHONY: e2e-shell test test-all test-spec test-chromium test-firefox test-webkit test-headed
 
 # Shell interactivo en el contenedor de e2e
 e2e-shell:
@@ -48,17 +44,17 @@ e2e-shell:
 # Test por defecto (variable SPEC controla el archivo)
 test:
 ifeq ($(HEADED),1)
-        $(DC) run --rm $(E2E_SERVICE) bash -lc "$(BOOTSTRAP) && xvfb-run -a npx playwright test $(SPEC) --project $(BROWSER)"
+	$(DC) run --rm $(E2E_SERVICE) bash -lc "xvfb-run -a npx playwright test $(SPEC) --project $(BROWSER)"
 else
-        $(DC) run --rm $(E2E_SERVICE) bash -lc "$(BOOTSTRAP) && npx playwright test $(SPEC) --project $(BROWSER)"
+	$(DC) run --rm $(E2E_SERVICE) bash -lc "npx playwright test $(SPEC) --project $(BROWSER)"
 endif
 
 # Ejecuta toda la suite
 test-all:
 ifeq ($(HEADED),1)
-        $(DC) run --rm $(E2E_SERVICE) bash -lc "$(BOOTSTRAP) && xvfb-run -a npx playwright test"
+	$(DC) run --rm $(E2E_SERVICE) bash -lc "xvfb-run -a npx playwright test"
 else
-        $(DC) run --rm $(E2E_SERVICE) bash -lc "$(BOOTSTRAP) && npx playwright test"
+	$(DC) run --rm $(E2E_SERVICE) bash -lc "npx playwright test"
 endif
 
 # Ejecuta un spec arbitrario: make test-spec SPEC=path/a/tu.spec.ts
@@ -97,7 +93,7 @@ allure-open:
 
 # Borra resultados y report estático compartido
 allure-clean:
-        $(DC) run --rm $(E2E_SERVICE) bash -lc "mkdir -p report/allure-results report/allure-report && rm -rf report/allure-results/* report/allure-report/* || true"
+	$(DC) run --rm $(E2E_SERVICE) bash -lc "rm -rf report/allure-results/* report/allure-report/* || true"
 
 # ====== Flujos cortos ======
 .PHONY: dev test-ci
